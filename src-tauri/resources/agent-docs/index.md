@@ -65,6 +65,7 @@ When users ask how to improve a knowledge base, structure notes, choose types, m
 - [Spreadsheet File Format](pages/reference/spreadsheet-format.md)
 - [Spreadsheet Formulas](pages/reference/spreadsheet-functions.md)
 - [Supported Platforms](pages/reference/supported-platforms.md)
+- [Background Mode](pages/reference/tray-resident-mode.md)
 - [Vault Expressions](pages/reference/vault-expressions.md)
 - [View Filters](pages/reference/view-filters.md)
 

@@ -228,3 +228,4 @@ proposed → active → superseded
 | [0170](0170-measurable-crash-safe-startup.md) | Measurable, crash-safe startup | active |
 | [0171](0171-separate-vault-application-instances.md) | Separate vault application instances | active |
 | [0172](0172-local-codescene-change-safeguards.md) | Local CodeScene safeguards before commits and direct-to-main pushes | active |
+| [0173](0173-opt-in-tray-resident-mode.md) | Opt-in tray resident mode | active |

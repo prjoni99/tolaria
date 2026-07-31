@@ -270,6 +270,12 @@ Desktop startup registers `tauri-plugin-deep-link` and `tauri-plugin-single-inst
 Linux and Windows use custom React-rendered window chrome instead of the native Tauri menu bar. `setup_custom_window_chrome()` drops server-side decorations on the main window, `openNoteInNewWindow()` does the same for detached note windows, and `LinuxTitlebar`/`LinuxMenuButton` route both window controls and menu actions back through the same shared command pipeline that the desktop native menus use. The native app menu is macOS-only so Services/Hide/Quit, the reserved `WINDOW_SUBMENU_ID`, and its predefined `Cmd+Ctrl+F` fullscreen item keep behaving like normal NSApp menu items, while cross-platform custom items such as Check for Updates emit Tolaria command IDs with visible updater feedback from the renderer menu. An audited local AppKit key monitor consumes physical Escape only while the main window is fullscreen and the renderer has registered a visible dismissable surface, then redispatches Escape into the webview so the surface closes before native fullscreen handles the next bare Escape.
 On Linux, `run()` applies WebKitGTK startup safeguards before Tauri creates the webview. Native Wayland launches and AppImage launches inject `WEBKIT_DISABLE_DMABUF_RENDERER=1` and `WEBKIT_DISABLE_COMPOSITING_MODE=1` independently unless the user already set either variable, covering compositor-specific WebKit crashes without changing native X11 launches. AppImage launches keep the additional AppImage-only safeguards: on Wayland sessions Tolaria re-execs once with the first architecture-matching system `libwayland-client.so` in `LD_PRELOAD` when the user has not provided their own preload. The candidate order prefers Fedora-style `lib64` and Debian-style `x86_64-linux-gnu` paths before generic `/usr/lib`, and the ELF header is checked so a 64-bit Tolaria process does not retry with a 32-bit Wayland client library. Runtime startup writes a mount-path-specific `GTK_IM_MODULE_FILE` cache when fcitx is configured via `GTK_IM_MODULE=fcitx` or common fcitx environment hints; release packaging currently uses Tauri's stock linuxdeploy AppImage output plugin instead of Tolaria's experimental output-plugin shim. If the user has not already chosen `GTK_IM_MODULE`, Tolaria sets `GTK_IM_MODULE=fcitx` before WebKit starts. The same AppImage path checks whether `fc-match` resolves the default emoji font to `Noto-COLRv1.ttf`; when the user has not provided `FONTCONFIG_FILE` or `FONTCONFIG_PATH`, Tolaria writes a cache-local fontconfig file that rejects only that matched font file and exports it before WebKit starts. The rendering overrides keep WebViews from blanking or crashing after accelerated compositing/DMA-BUF failures, the re-exec addresses AppImage library-order failures that can surface as `Could not create default EGL display: EGL_BAD_PARAMETER`, and the fontconfig guard avoids known WebKit crashes in COLRv1 emoji font rendering while leaving other emoji fonts available.
 
+## Tray Resident Mode
+
+An opt-in `tray_resident_mode_enabled` app setting (default off, see [ADR-0173](adr/0173-opt-in-tray-resident-mode.md)) keeps Tolaria running behind a macOS menu bar / Windows-Linux system tray icon after the main window is closed. `tray_state.rs` holds the decisions as pure functions — whether a close is intercepted, whether macOS may drop to `ActivationPolicy::Accessory`, whether the icon should be created or destroyed, and whether a hidden window has to be restored — and `tray.rs` is the Tauri glue that applies them.
+
+Close interception runs in `handle_run_event` after `window_state::handle_run_event` has already persisted the frame, so hiding the window does not regress window restore; Tauri delivers `CloseRequested` to both listeners before it reads the close signal. Only the `main` label is intercepted, so `note-*` and `ai-workspace` windows close normally. A `quitting` flag in the managed `TrayResidentState` lets the real exit path through instead of looping back into a hide, and macOS Cmd+Q terminates through `applicationWillTerminate` without ever raising `CloseRequested`. The app goes accessory only once no window is visible and returns to `Regular` whenever the window is shown, which is also what the single-instance and deep-link paths call. Tray creation failures log and continue, and Linux — where the icon needs `libayatana-appindicator3` and never emits click events — falls back to the tray menu as its only interaction.
+
 ## Multi-Window (Note Windows)
 
 Notes can be opened in separate Tauri windows for focused editing. Secondary windows boot the same `App` shell and load the same active workspace graph as the main window, but they start in the editor-only view mode with side panels collapsed.
@@ -786,6 +792,8 @@ The vault backend (`src-tauri/src/vault/`) is split into focused submodules:
 | `vault_config.rs` | Per-vault UI config |
 | `vault_list.rs` | Vault list persistence |
 | `menu.rs` | Native desktop menu definitions and command IDs (not mounted on Linux) |
+| `tray.rs` | Tray icon, tray menu and resident-mode Tauri glue |
+| `tray_state.rs` | Pure tray resident-mode decision rules (close interception, activation policy, icon lifecycle) |
 
 ## Tauri IPC Commands
 
@@ -888,6 +896,7 @@ The desktop MCP WebSocket bridge is intentionally local-only. `mcp-server/ws-bri
 |---------|-------------|
 | `get_settings` | Load app settings |
 | `save_settings` | Save app settings |
+| `set_tray_resident_mode` | Create or destroy the tray icon for the current preference, restoring a hidden window when the preference is turned off |
 | `load_vault_list` | Load vault list |
 | `save_vault_list` | Save vault list |
 | `get_vault_config` | Load per-vault UI config |

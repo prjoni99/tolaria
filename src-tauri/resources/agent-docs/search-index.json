@@ -529,6 +529,19 @@
     ]
   },
   {
+    "title": "Background Mode",
+    "path": "pages/reference/tray-resident-mode.md",
+    "url": "/reference/tray-resident-mode",
+    "section": "reference",
+    "headings": [
+      "Turning It On",
+      "What Changes",
+      "Quitting",
+      "Turning It Off",
+      "Linux"
+    ]
+  },
+  {
     "title": "Vault Expressions",
     "path": "pages/reference/vault-expressions.md",
     "url": "/reference/vault-expressions",
