@@ -398,6 +398,23 @@ pub fn save_settings(settings: Settings) -> Result<(), String> {
     crate::settings::save_settings(settings)
 }
 
+/// Create or destroy the tray icon so a preference change applies without a
+/// restart. Tray ownership stays in Rust; the renderer only reports the value.
+#[cfg(desktop)]
+#[tauri::command]
+pub fn set_tray_resident_mode(app_handle: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    crate::tray::set_resident_mode(&app_handle, enabled)
+}
+
+#[cfg(mobile)]
+#[tauri::command]
+pub fn set_tray_resident_mode(
+    _app_handle: tauri::AppHandle,
+    _enabled: bool,
+) -> Result<(), String> {
+    Ok(())
+}
+
 #[tauri::command]
 pub fn get_ai_workspace_sessions() -> Result<serde_json::Value, String> {
     crate::settings::get_ai_workspace_sessions()

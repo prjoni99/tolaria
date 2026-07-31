@@ -41,6 +41,10 @@ mod pi_events;
 pub mod search;
 pub mod settings;
 pub mod telemetry;
+#[cfg(desktop)]
+mod tray;
+#[cfg(desktop)]
+mod tray_state;
 pub mod vault;
 mod vault_instance;
 pub mod vault_list;
@@ -140,6 +144,7 @@ fn setup_desktop_plugins(app: &mut tauri::App) -> Result<(), Box<dyn std::error:
     }
     setup_custom_window_chrome(app)?;
     window_state::restore_main_window_state(app);
+    tray::setup(app);
     show_debug_main_window(app);
     Ok(())
 }
@@ -325,6 +330,7 @@ macro_rules! app_invoke_handler {
             commands::update_current_window_min_size,
             commands::perform_current_window_titlebar_double_click,
             commands::save_settings,
+            commands::set_tray_resident_mode,
             commands::save_ai_workspace_sessions,
             commands::download_and_install_app_update,
             commands::load_vault_list,
@@ -394,6 +400,7 @@ pub fn run() {
             Vec::new(),
         )))
         .manage(window_state::MainWindowFrameState::default())
+        .manage(tray::TrayResidentState::default())
         .manage(vault_watcher::VaultWatcherState::new());
 
     with_invoke_handler(builder)
