@@ -95,13 +95,7 @@ fn setup_common_plugins(app: &mut tauri::App) -> Result<(), Box<dyn std::error::
 
 #[cfg(desktop)]
 fn focus_main_window(app_handle: &tauri::AppHandle) {
-    use tauri::Manager;
-
-    if let Some(window) = app_handle.get_webview_window("main") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    tray::show_main_window(app_handle);
 }
 
 #[cfg(desktop)]
@@ -375,6 +369,7 @@ fn handle_run_event(app_handle: &tauri::AppHandle, event: &tauri::RunEvent) {
     use tauri::Manager;
 
     window_state::handle_run_event(app_handle, event);
+    tray::handle_run_event(app_handle, event);
 
     if let tauri::RunEvent::Exit = event {
         let state: tauri::State<'_, desktop_runtime::WsBridgeChild> = app_handle.state();
