@@ -15,6 +15,7 @@ const SUPPORTED_DEFAULT_AI_AGENTS: &[&str] = &[
     "hermes",
 ];
 pub const DEFAULT_HIDE_GITIGNORED_FILES: bool = true;
+pub const DEFAULT_TRAY_RESIDENT_MODE: bool = false;
 const SUPPORTED_NOTE_WIDTH_MODES: &[&str] = &["normal", "wide"];
 const SUPPORTED_DATE_DISPLAY_FORMATS: &[&str] = &["us", "european", "friendly", "iso"];
 const SUPPORTED_UI_LANGUAGE_ALIASES: &[(&str, &str)] = &[
@@ -123,6 +124,7 @@ pub struct Settings {
     pub all_notes_show_images: Option<bool>,
     pub all_notes_show_unsupported: Option<bool>,
     pub multi_workspace_enabled: Option<bool>,
+    pub tray_resident_mode_enabled: Option<bool>,
 }
 
 fn normalize_optional_string(value: Option<String>) -> Option<String> {
@@ -198,6 +200,18 @@ pub fn hide_gitignored_files_enabled() -> bool {
         .unwrap_or(DEFAULT_HIDE_GITIGNORED_FILES)
 }
 
+pub fn should_use_tray_resident_mode(settings: &Settings) -> bool {
+    settings
+        .tray_resident_mode_enabled
+        .unwrap_or(DEFAULT_TRAY_RESIDENT_MODE)
+}
+
+pub fn tray_resident_mode_enabled() -> bool {
+    get_settings()
+        .map(|settings| should_use_tray_resident_mode(&settings))
+        .unwrap_or(DEFAULT_TRAY_RESIDENT_MODE)
+}
+
 fn canonical_language_code(value: &str) -> Option<String> {
     let code = value.trim().replace('_', "-").to_ascii_lowercase();
     if code.is_empty() {
@@ -254,6 +268,7 @@ fn normalize_settings(settings: Settings) -> Settings {
         all_notes_show_images: settings.all_notes_show_images,
         all_notes_show_unsupported: settings.all_notes_show_unsupported,
         multi_workspace_enabled: settings.multi_workspace_enabled,
+        tray_resident_mode_enabled: settings.tray_resident_mode_enabled,
     }
 }
 
@@ -478,6 +493,7 @@ mod tests {
             all_notes_show_pdfs: Some(true),
             all_notes_show_images: Some(true),
             all_notes_show_unsupported: Some(false),
+            tray_resident_mode_enabled: Some(true),
         };
         let json = serde_json::to_string(&settings).unwrap();
         let parsed: Settings = serde_json::from_str(&json).unwrap();
@@ -517,6 +533,7 @@ mod tests {
             all_notes_show_pdfs: Some(true),
             all_notes_show_images: Some(false),
             all_notes_show_unsupported: Some(true),
+            tray_resident_mode_enabled: Some(true),
             ..Default::default()
         });
         assert_eq!(loaded.auto_pull_interval_minutes, Some(10));
@@ -541,6 +558,33 @@ mod tests {
         assert_eq!(loaded.all_notes_show_pdfs, Some(true));
         assert_eq!(loaded.all_notes_show_images, Some(false));
         assert_eq!(loaded.all_notes_show_unsupported, Some(true));
+        assert_eq!(loaded.tray_resident_mode_enabled, Some(true));
+    }
+
+    #[test]
+    fn test_tray_resident_mode_is_disabled_by_default() {
+        assert!(!should_use_tray_resident_mode(&Settings::default()));
+        assert!(should_use_tray_resident_mode(&Settings {
+            tray_resident_mode_enabled: Some(true),
+            ..Default::default()
+        }));
+        assert!(!should_use_tray_resident_mode(&Settings {
+            tray_resident_mode_enabled: Some(false),
+            ..Default::default()
+        }));
+    }
+
+    #[test]
+    fn test_settings_file_without_tray_resident_mode_still_loads() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("settings.json");
+        fs::write(&path, r#"{"auto_pull_interval_minutes":5,"git_enabled":true}"#).unwrap();
+
+        let loaded = get_settings_at(&path).unwrap();
+
+        assert_eq!(loaded.auto_pull_interval_minutes, Some(5));
+        assert_eq!(loaded.tray_resident_mode_enabled, None);
+        assert!(!should_use_tray_resident_mode(&loaded));
     }
 
     #[test]

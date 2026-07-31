@@ -11,6 +11,7 @@ import {
 import { serializeUiLanguagePreference } from '../lib/i18n'
 import { trackThemeModeChanged } from '../lib/productAnalytics'
 import { normalizeReleaseChannel, serializeReleaseChannel } from '../lib/releaseChannel'
+import { syncTrayResidentMode } from '../lib/trayResidentMode'
 import { normalizeDateDisplayFormat } from '../utils/dateDisplay'
 import { DEFAULT_THEME_MODE, normalizeThemeMode, type ThemeMode } from '../lib/themeMode'
 import type { Settings } from '../types'
@@ -69,6 +70,7 @@ const EMPTY_SETTINGS: Settings = {
   all_notes_show_images: null,
   all_notes_show_unsupported: null,
   multi_workspace_enabled: null,
+  tray_resident_mode_enabled: null,
 }
 
 function normalizeSettings(settings: Settings): Settings {
@@ -100,6 +102,7 @@ function normalizeSettings(settings: Settings): Settings {
     all_notes_show_images: settings.all_notes_show_images ?? null,
     all_notes_show_unsupported: settings.all_notes_show_unsupported ?? null,
     multi_workspace_enabled: settings.multi_workspace_enabled ?? null,
+    tray_resident_mode_enabled: settings.tray_resident_mode_enabled ?? null,
   }
 }
 
@@ -181,6 +184,7 @@ export function useSettings() {
       if (previousHideGitignored !== nextHideGitignored) {
         notifyGitignoredVisibilityChanged(nextHideGitignored)
       }
+      await syncTrayResidentMode(settings, normalizedSettings)
     } catch (err) {
       console.error('Failed to save settings:', err)
     }

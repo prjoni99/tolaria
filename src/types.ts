@@ -149,6 +149,7 @@ export interface Settings {
   all_notes_show_images?: boolean | null
   all_notes_show_unsupported?: boolean | null
   multi_workspace_enabled?: boolean | null
+  tray_resident_mode_enabled?: boolean | null
 }
 
 export interface AiWorkspaceConversationSetting {
