@@ -408,10 +408,7 @@ pub fn set_tray_resident_mode(app_handle: tauri::AppHandle, enabled: bool) -> Re
 
 #[cfg(mobile)]
 #[tauri::command]
-pub fn set_tray_resident_mode(
-    _app_handle: tauri::AppHandle,
-    _enabled: bool,
-) -> Result<(), String> {
+pub fn set_tray_resident_mode(_app_handle: tauri::AppHandle, _enabled: bool) -> Result<(), String> {
     Ok(())
 }
 

@@ -150,8 +150,10 @@ fn create_tray_icon(app_handle: &AppHandle) -> tauri::Result<()> {
 }
 
 fn build_tray_menu(app_handle: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let show = MenuItemBuilder::with_id(SHOW_MENU_ITEM_ID, SHOW_MENU_ITEM_LABEL).build(app_handle)?;
-    let quit = MenuItemBuilder::with_id(QUIT_MENU_ITEM_ID, QUIT_MENU_ITEM_LABEL).build(app_handle)?;
+    let show =
+        MenuItemBuilder::with_id(SHOW_MENU_ITEM_ID, SHOW_MENU_ITEM_LABEL).build(app_handle)?;
+    let quit =
+        MenuItemBuilder::with_id(QUIT_MENU_ITEM_ID, QUIT_MENU_ITEM_LABEL).build(app_handle)?;
     MenuBuilder::new(app_handle)
         .item(&show)
         .separator()

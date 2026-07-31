@@ -578,7 +578,11 @@ mod tests {
     fn test_settings_file_without_tray_resident_mode_still_loads() {
         let dir = tempfile::TempDir::new().unwrap();
         let path = dir.path().join("settings.json");
-        fs::write(&path, r#"{"auto_pull_interval_minutes":5,"git_enabled":true}"#).unwrap();
+        fs::write(
+            &path,
+            r#"{"auto_pull_interval_minutes":5,"git_enabled":true}"#,
+        )
+        .unwrap();
 
         let loaded = get_settings_at(&path).unwrap();
 

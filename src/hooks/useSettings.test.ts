@@ -44,6 +44,7 @@ const defaultSettings: Settings = {
   all_notes_show_pdfs: null,
   all_notes_show_images: null,
   all_notes_show_unsupported: null,
+  tray_resident_mode_enabled: null,
 }
 
 const savedSettings: Settings = {
@@ -78,6 +79,7 @@ const savedSettings: Settings = {
   all_notes_show_pdfs: null,
   all_notes_show_images: null,
   all_notes_show_unsupported: null,
+  tray_resident_mode_enabled: null,
 }
 
 let mockSettingsStore: Settings = { ...defaultSettings }
@@ -149,6 +151,7 @@ function changedSettings(): Settings {
     all_notes_show_pdfs: true,
     all_notes_show_images: false,
     all_notes_show_unsupported: true,
+    tray_resident_mode_enabled: null,
   }
 }
 
@@ -261,6 +264,31 @@ describe('useSettings', () => {
 
     expect(mockInvokeFn).toHaveBeenCalledWith('save_settings', { settings: newSettings })
     expect(result.current.settings).toEqual(newSettings)
+  })
+
+  it('tracks tray resident mode only when the preference actually changes', async () => {
+    const { result } = renderHook(() => useSettings())
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true)
+    })
+
+    await act(async () => {
+      await result.current.saveSettings({ ...defaultSettings, tray_resident_mode_enabled: true })
+    })
+
+    expect(trackEventMock).toHaveBeenCalledWith('tray_resident_mode_toggled', { enabled: 1 })
+
+    trackEventMock.mockClear()
+
+    await act(async () => {
+      await result.current.saveSettings({ ...defaultSettings, tray_resident_mode_enabled: true })
+    })
+
+    expect(trackEventMock).not.toHaveBeenCalledWith(
+      'tray_resident_mode_toggled',
+      expect.anything(),
+    )
   })
 
   it('tracks theme mode changes after settings save succeeds', async () => {
