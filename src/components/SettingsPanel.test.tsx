@@ -1145,4 +1145,41 @@ describe('SettingsPanel', () => {
       }))
     })
   })
+
+  describe('desktop section', () => {
+    function trayResidentModeSwitch() {
+      return within(screen.getByTestId('settings-tray-resident-mode')).getByRole('switch')
+    }
+
+    it('shows tray resident mode off by default', () => {
+      renderOpenSettings()
+
+      expect(screen.getByText('Keep Tolaria running in the background')).toBeInTheDocument()
+      expect(trayResidentModeSwitch()).toHaveAttribute('aria-checked', 'false')
+    })
+
+    it('reflects the stored tray resident mode preference', () => {
+      renderOpenSettings({ ...emptySettings, tray_resident_mode_enabled: true })
+
+      expect(trayResidentModeSwitch()).toHaveAttribute('aria-checked', 'true')
+    })
+
+    it('saves tray resident mode when toggled on', () => {
+      renderOpenSettings()
+
+      fireEvent.click(trayResidentModeSwitch())
+      saveSettingsPanel()
+
+      expectSettingsSaved({ tray_resident_mode_enabled: true })
+    })
+
+    it('saves tray resident mode when toggled back off', () => {
+      renderOpenSettings({ ...emptySettings, tray_resident_mode_enabled: true })
+
+      fireEvent.click(trayResidentModeSwitch())
+      saveSettingsPanel()
+
+      expectSettingsSaved({ tray_resident_mode_enabled: false })
+    })
+  })
 })

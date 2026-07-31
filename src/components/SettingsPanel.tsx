@@ -1,4 +1,4 @@
-import { Copy, Cube, Monitor, Moon, Sun, X } from '@phosphor-icons/react'
+import { AppWindow, Copy, Cube, Monitor, Moon, Sun, X } from '@phosphor-icons/react'
 import {
   AI_AGENT_DEFINITIONS,
   createMissingAiAgentsStatus,
@@ -45,6 +45,7 @@ import { shouldHideGitignoredFiles } from '../lib/gitignoredVisibility'
 import { areGitFeaturesEnabled } from '../lib/gitSettings'
 import { areAiFeaturesEnabled } from '../lib/aiFeatures'
 import { areAutomaticUpdateChecksEnabled } from '../lib/automaticUpdateChecks'
+import { isTrayResidentModeEnabled } from '../lib/trayResidentMode'
 import { trackAllNotesVisibilityChanged } from '../lib/productAnalytics'
 import { AiProviderSettings } from './AiProviderSettings'
 import { AiAgentIcon } from './AiAgentIcon'
@@ -129,6 +130,7 @@ interface SettingsDraft {
   hideGitignoredFiles: boolean
   allNotesFileVisibility: AllNotesFileVisibility
   multiWorkspaceEnabled: boolean
+  trayResidentModeEnabled: boolean
   crashReporting: boolean
   analytics: boolean
   explicitOrganization: boolean
@@ -190,6 +192,8 @@ interface SettingsBodyProps {
   setAllNotesFileVisibility: (value: AllNotesFileVisibility) => void
   multiWorkspaceEnabled: boolean
   setMultiWorkspaceEnabled: (value: boolean) => void
+  trayResidentModeEnabled: boolean
+  setTrayResidentModeEnabled: (value: boolean) => void
   vaults: VaultOption[]
   defaultWorkspacePath?: string | null
   onRemoveVault?: (path: string) => void; onReorderVaults?: (orderedPaths: string[]) => void; onSetDefaultWorkspace?: (path: string) => void; onUpdateWorkspaceIdentity?: (path: string, patch: Partial<VaultOption>) => void
@@ -245,6 +249,7 @@ function createSettingsDraft(
     hideGitignoredFiles: shouldHideGitignoredFiles(settings),
     allNotesFileVisibility: resolveAllNotesFileVisibility(settings),
     multiWorkspaceEnabled: settings.multi_workspace_enabled === true,
+    trayResidentModeEnabled: isTrayResidentModeEnabled(settings),
     crashReporting: settings.crash_reporting_enabled ?? false,
     analytics: settings.analytics_enabled ?? false,
     explicitOrganization: explicitOrganizationEnabled,
@@ -299,6 +304,7 @@ function buildSettingsFromDraft(settings: Settings, draft: SettingsDraft): Setti
     ai_model_providers: draft.aiModelProviders.length > 0 ? draft.aiModelProviders : null,
     hide_gitignored_files: draft.hideGitignoredFiles,
     multi_workspace_enabled: draft.multiWorkspaceEnabled,
+    tray_resident_mode_enabled: draft.trayResidentModeEnabled,
   }
   return settingsWithAllNotesFileVisibility(nextSettings, draft.allNotesFileVisibility)
 }
@@ -626,6 +632,8 @@ function SettingsBodyFromDraft({
       setAllNotesFileVisibility={setAllNotesFileVisibility}
       multiWorkspaceEnabled={draft.multiWorkspaceEnabled}
       setMultiWorkspaceEnabled={(value) => updateDraft('multiWorkspaceEnabled', value)}
+      trayResidentModeEnabled={draft.trayResidentModeEnabled}
+      setTrayResidentModeEnabled={(value) => updateDraft('trayResidentModeEnabled', value)}
       vaults={vaults}
       defaultWorkspacePath={defaultWorkspacePath}
       {...{ onRemoveVault, onReorderVaults, onSetDefaultWorkspace, onUpdateWorkspaceIdentity }}
@@ -646,6 +654,7 @@ function SettingsBody(props: SettingsBodyProps) {
       <div className="min-w-0 flex-1 overflow-auto px-6 py-4">
         <SettingsSyncAndAppearanceSections {...props} />
         <SettingsContentSections {...props} />
+        <SettingsDesktopSection {...props} />
         <SettingsAgentWorkflowSections {...props} />
       </div>
     </div>
@@ -788,6 +797,30 @@ function SettingsContentSections({
         allNotesFileVisibility={allNotesFileVisibility}
         setAllNotesFileVisibility={setAllNotesFileVisibility}
       />
+    </SettingsSection>
+  )
+}
+
+function SettingsDesktopSection({
+  t,
+  trayResidentModeEnabled,
+  setTrayResidentModeEnabled,
+}: Pick<SettingsBodyProps, 't' | 'trayResidentModeEnabled' | 'setTrayResidentModeEnabled'>) {
+  return (
+    <SettingsSection id={SETTINGS_SECTION_IDS.desktop}>
+      <SectionHeading
+        icon={<AppWindow size={16} aria-hidden="true" />}
+        title={t('settings.desktop.title')}
+      />
+      <SettingsGroup>
+        <SettingsSwitchRow
+          label={t('settings.desktop.trayResidentMode')}
+          description={t('settings.desktop.trayResidentModeDescription')}
+          checked={trayResidentModeEnabled}
+          onChange={setTrayResidentModeEnabled}
+          testId="settings-tray-resident-mode"
+        />
+      </SettingsGroup>
     </SettingsSection>
   )
 }
